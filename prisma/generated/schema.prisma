@@ -1,0 +1,93 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  accounts  Account[]
+  files     File[]
+}
+
+model Account {
+  id                    String   @id @default(uuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id])
+  email                 String   @unique
+  encryptedRefreshToken String
+  quotaTotalBytes       BigInt
+  quotaUsedBytes        BigInt
+  uploadedTodayBytes    BigInt   @default(0)
+  health                Boolean  @default(true)
+  lastCheckedAt         DateTime @updatedAt
+  createdAt             DateTime @default(now())
+  chunks                Chunk[]
+}
+
+model File {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  sizeBytes   BigInt
+  mimeType    String?
+  totalChunks Int
+  sha256Full  String?
+  status      FileStatus   @default(UPLOADING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  chunks      Chunk[]
+  permissions Permission[]
+}
+
+model Chunk {
+  id          String      @id @default(uuid())
+  fileId      String
+  file        File        @relation(fields: [fileId], references: [id])
+  sequenceNo  Int
+  sha256      String
+  sizeBytes   Int
+  accountId   String
+  account     Account     @relation(fields: [accountId], references: [id])
+  driveFileId String?
+  status      ChunkStatus @default(PENDING)
+  replicaOf   String?
+  createdAt   DateTime    @default(now())
+
+  @@unique([fileId, sequenceNo])
+  @@index([fileId, sequenceNo])
+}
+
+model Permission {
+  id          String         @id @default(uuid())
+  fileId      String
+  file        File           @relation(fields: [fileId], references: [id])
+  principalId String
+  role        PermissionRole
+  createdAt   DateTime       @default(now())
+}
+
+enum FileStatus {
+  UPLOADING
+  COMMITTED
+  FAILED
+}
+
+enum ChunkStatus {
+  PENDING
+  UPLOADING
+  COMPLETE
+  FAILED
+}
+
+enum PermissionRole {
+  OWNER
+  EDITOR
+  VIEWER
+}

@@ -36,6 +36,10 @@ const envSchema = z.object({
     .string()
     .url("GOOGLE_REDIRECT_URI must be a valid URL"),
 
+    LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+    .default('info'),
+
 })
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -51,3 +55,5 @@ if(!parsedEnv.success){
 
   process.exit(1);
 }
+
+export const config = parsedEnv.data!
