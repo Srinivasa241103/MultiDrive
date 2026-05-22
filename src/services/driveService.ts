@@ -82,7 +82,8 @@ export async function getStorageQuota(
     });
 
     if(!response.ok){
-        throw new Error(`Failed to fetch storage quota for account ${accountId}: ${response.status}`);
+        const body = await response.text();
+        throw new Error(`Failed to fetch storage quota for account ${accountId}: ${response.status} — ${body}`);
     }
 
     const data = (await response.json()) as {

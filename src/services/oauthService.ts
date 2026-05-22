@@ -2,7 +2,12 @@ import {OAuth2Client} from 'google-auth-library';
 import {config} from '../config/env';
 
 const REDIRECT_URI = config.GOOGLE_REDIRECT_URI;
-const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/userinfo.profile',
+];
 
 export function createOAuthClient(): OAuth2Client{
     return new OAuth2Client(

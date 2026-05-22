@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { createReadStream } from "fs";
 import { writeFile, mkdir, rm } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -70,7 +71,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(1024 * 1024); // 1 MB — well under 8 MB
     const filePath = await writeTempFile("1mb.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     expect(result.totalChunks).toBe(1);
     expect(result.chunks).toHaveLength(1);
@@ -85,7 +86,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(ONE_HUNDRED_MB, 42);
     const filePath = await writeTempFile("100mb.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     const expectedChunks = Math.ceil(ONE_HUNDRED_MB / CHUNK_SIZE); // 13
     expect(result.totalChunks).toBe(expectedChunks);
@@ -99,7 +100,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(CHUNK_SIZE * 2, 7);
     const filePath = await writeTempFile("exact-2chunks.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     expect(result.totalChunks).toBe(2);
     expect(result.chunks).toHaveLength(2);
@@ -116,7 +117,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(CHUNK_SIZE * 3 + 1024); // 3 full + small tail
     const filePath = await writeTempFile("seq-test.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     result.chunks.forEach((chunk: ChunkMeta, index: number) => {
       expect(chunk.sequenceNo).toBe(index);
@@ -136,7 +137,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(CHUNK_SIZE * 2 + EXTRA, 3);
     const filePath = await writeTempFile("sizes-test.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     // chunks 0 and 1 must be full-size
     expect(result.chunks[0].sizeBytes).toBe(CHUNK_SIZE);
@@ -153,7 +154,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(FILE_SIZE, 9);
     const filePath = await writeTempFile("totalbytes-test.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     expect(result.totalBytes).toBe(FILE_SIZE);
 
@@ -172,7 +173,7 @@ describe("chunkFile", () => {
     const originalHash = sha256Hex(original);
     const filePath = await writeTempFile("reassembly-100mb.bin", original);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     // Concatenate chunk data in order
     const reassembled = Buffer.concat(
@@ -194,7 +195,7 @@ describe("chunkFile", () => {
     const originalHash = sha256Hex(original);
     const filePath = await writeTempFile("reassembly-exact.bin", original);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     const reassembled = Buffer.concat(result.chunks.map((c) => c.data));
     expect(sha256Hex(reassembled)).toBe(originalHash);
@@ -212,7 +213,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(CHUNK_SIZE * 2 + 4096, 11);
     const filePath = await writeTempFile("hashes-test.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     for (const chunk of result.chunks) {
       const expected = sha256Hex(chunk.data);
@@ -232,7 +233,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(CHUNK_SIZE + 1024, 77);
     const filePath = await writeTempFile("bitflip-test.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
     const chunk = result.chunks[0];
 
     // Record the original hash as stored by the chunker
@@ -259,7 +260,7 @@ describe("chunkFile", () => {
     const data = makeBuffer(CHUNK_SIZE + 512, 22);
     const filePath = await writeTempFile("tempfile-test.bin", data);
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     // Verify temp files exist
     for (const chunk of result.chunks) {
@@ -284,7 +285,7 @@ describe("chunkFile", () => {
   it("produces zero chunks and totalBytes = 0 for an empty file", async () => {
     const filePath = await writeTempFile("empty.bin", Buffer.alloc(0));
 
-    const result = await chunkFile(filePath);
+    const result = await chunkFile(createReadStream(filePath));
 
     expect(result.totalChunks).toBe(0);
     expect(result.chunks).toHaveLength(0);
