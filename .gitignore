@@ -1,3 +1,5 @@
 .env
-node_modules/downloaded-video.mp4
+node_modules/
+dist/
 *.mp4
+downloaded-video.mp4
