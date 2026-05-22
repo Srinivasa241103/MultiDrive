@@ -19,8 +19,7 @@ const envSchema = z.object({
     
     REDIS_URL: z
     .string()
-    .min(1, 'REDIS_URL is required')
-    .optional(),
+    .min(1, 'REDIS_URL is required'),
     
     JWT_SECRET: z.string(),
     
@@ -39,6 +38,9 @@ const envSchema = z.object({
     LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
     .default('info'),
+
+    ENCRYPTION_PASSPHRASE: z.string().min(16),
+    ENCRYPTION_SALT: z.string().length(32), // 16 bytes = 32 hex chars
 
 })
 
