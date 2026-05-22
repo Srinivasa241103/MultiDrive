@@ -1,6 +1,12 @@
 import { db } from '../db/client';
 import { FileStatus, ChunkStatus } from '@prisma/client';
 import type { ChunkManifestEntry } from '../types/domain';
+import { downloadChunkFromDrive } from './driveService';
+import { getCachedChunk, cacheChunk } from './chunk-cache';
+import { verifyBuffer } from './hashing';
+import { decrypt, getKey } from './cipher';
+import { IntegrityError } from '../utils/errors';
+
 
 export async function createFileRecord(params: {
   userId: string;
@@ -93,4 +99,30 @@ export async function markFileFailed(fileId: string): Promise<void> {
     where: { id: fileId },
     data: { status: FileStatus.FAILED },
   });
+}
+
+
+export async function* downloadFileChunks(
+  fileId: string,
+): AsyncGenerator<Buffer> {
+  const manifest = await getChunkManifest(fileId);
+
+  if (manifest.length === 0) {
+    throw new Error(`No committed chunks found for file ${fileId}`);
+  }
+
+  for (const entry of manifest) {
+    let data = await getCachedChunk(entry.sha256);
+
+    if (!data) {
+      data = await downloadChunkFromDrive(entry.accountId, entry.driveFileId);
+      await cacheChunk(entry.sha256, data);
+    }
+
+    verifyBuffer(data, entry.sha256);
+
+    const key = await getKey();
+    const decrypted = decrypt(data, key);
+    yield decrypted;
+  }
 }
