@@ -8,6 +8,12 @@ import { fileRoutes } from './routes/filesRoute.js';
 import { logger } from '../utils/logger.js';
 import { config } from '../config/env.js';
 import { CONSTANTS } from '../config/constants.js';
+import { register } from '../utils/metrics';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { FastifyAdapter } from '@bull-board/fastify';
+import { createBullBoard } from '@bull-board/api';
+import { uploadQueue } from '../services/queue/uploadQueue';
+
 
 export async function buildServer(): Promise<FastifyInstance> {
     const app = Fastify({
@@ -19,6 +25,14 @@ export async function buildServer(): Promise<FastifyInstance> {
         limits: { fileSize: CONSTANTS.MAX_UPLOAD_SIZE_BYTES },
     });
     await app.register(jwt, { secret: config.JWT_SECRET });
+
+    const serverAdapter = new FastifyAdapter();
+    serverAdapter.setBasePath('/admin/queues');
+    createBullBoard({
+        queues: [new BullMQAdapter(uploadQueue)],
+        serverAdapter,
+    });
+    await app.register(serverAdapter.registerPlugin(), { prefix: '/admin/queues' });
 
     await app.register(healthRoutes);
     await app.register(authRoutes);
@@ -32,6 +46,11 @@ export async function buildServer(): Promise<FastifyInstance> {
         }));
         const token = app.jwt.sign({ id: user.id, email: user.email });
         reply.send({ token, userId: user.id });
+    });
+
+    app.get('/metrics', async (request, reply) => {
+        reply.header('Content-Type', register.contentType);
+        reply.send(await register.metrics());
     });
 
     return app as unknown as FastifyInstance;
