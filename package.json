@@ -9,7 +9,8 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev": "tsx watch src/api/server.ts"
+    "dev": "tsx watch src/api/server.ts",
+    "worker": "tsx src/services/uploadWorker.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.2.0",

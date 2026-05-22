@@ -111,18 +111,18 @@ export async function* downloadFileChunks(
     throw new Error(`No committed chunks found for file ${fileId}`);
   }
 
-  for (const entry of manifest) {
-    let data = await getCachedChunk(entry.sha256);
+  const key = await getKey();
 
-    if (!data) {
-      data = await downloadChunkFromDrive(entry.accountId, entry.driveFileId);
-      await cacheChunk(entry.sha256, data);
+  for (const entry of manifest) {
+    let plaintext = await getCachedChunk(entry.sha256);
+
+    if (!plaintext) {
+      const encrypted = await downloadChunkFromDrive(entry.accountId, entry.driveFileId);
+      plaintext = decrypt(encrypted, key);
+      verifyBuffer(plaintext, entry.sha256);
+      await cacheChunk(entry.sha256, plaintext);
     }
 
-    verifyBuffer(data, entry.sha256);
-
-    const key = await getKey();
-    const decrypted = decrypt(data, key);
-    yield decrypted;
+    yield plaintext;
   }
 }

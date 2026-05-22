@@ -18,6 +18,43 @@ vi.mock('../../src/services/driveService', () => ({
   getStorageQuota: vi.fn().mockResolvedValue({ total: 1e12, used: 0 }),
 }));
 
+vi.mock('../services/fileService', () => ({
+  createFileRecord: vi.fn().mockResolvedValue('mock-file-id'),
+  markFileFailed: vi.fn().mockResolvedValue(undefined),
+  downloadFileChunks: vi.fn(),
+  getChunkManifest: vi.fn(),
+}));
+
+vi.mock('../services/placementService', () => ({
+  pickAccount: vi.fn().mockResolvedValue({ id: 'mock-account-id' }),
+}));
+
+vi.mock('../services/queue/jobs', () => ({
+  enqueueChunkUpload: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../db/client', () => ({
+  db: {
+    file: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      findUnique: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
+      create: vi.fn().mockResolvedValue({ id: 'mock-file-id' }),
+      update: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    },
+    chunk: {
+      findMany: vi.fn().mockResolvedValue([]),
+      count: vi.fn().mockResolvedValue(0),
+      upsert: vi.fn().mockResolvedValue(undefined),
+    },
+    account: {
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn().mockResolvedValue(undefined),
+    },
+  },
+}));
+
 let app: FastifyInstance;
 let testFilePath: string;
 let authToken: string;

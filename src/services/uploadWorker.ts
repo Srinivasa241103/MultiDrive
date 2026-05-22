@@ -6,6 +6,7 @@ import { markChunkComplete } from './fileService';
 import { recordBytesUploaded } from './placementService';
 import { CONSTANTS } from '../config/constants';
 import { logger } from '../utils/logger';
+import { encrypt, getKey } from './cipher';
 import type { UploadJobData, UploadJobResult } from '../types/domain';
 
 export const uploadWorker = new Worker<UploadJobData, UploadJobResult>(
@@ -15,7 +16,9 @@ export const uploadWorker = new Worker<UploadJobData, UploadJobResult>(
 
     logger.info({ fileId, sequenceNo, accountId }, 'processing chunk upload job');
 
-    const data = await readFile(localPath);
+    const rawData = await readFile(localPath);
+    const key = await getKey();
+    const data = await encrypt(rawData, key);
 
     const { driveFileId, md5Checksum } = await uploadChunkToDrive(
       accountId,
