@@ -16,31 +16,33 @@ model User {
 }
 
 model Account {
-    id                    String   @id @default(uuid())
+    id                    String    @id @default(uuid())
     userId                String
-    user                  User     @relation(fields: [userId], references: [id])
-    email                 String   @unique
-    encryptedRefreshToken String
+    user                  User      @relation(fields: [userId], references: [id])
+    email                 String    @unique
+    encryptedRefreshToken String?
     quotaTotalBytes       BigInt
     quotaUsedBytes        BigInt
-    uploadedTodayBytes    BigInt   @default(0)
-    health                Boolean  @default(true)
-    lastCheckedAt         DateTime @updatedAt
-    createdAt             DateTime @default(now())
+    uploadedTodayBytes    BigInt    @default(0)
+    health                Boolean   @default(true)
+    lastCheckedAt         DateTime  @updatedAt
+    createdAt             DateTime  @default(now())
     chunks                Chunk[]
+    accessToken           String?
+    tokenExpiresAt        DateTime?
 }
 
 model File {
-    id          String     @id @default(uuid())
+    id          String       @id @default(uuid())
     userId      String
-    user        User       @relation(fields: [userId], references: [id])
+    user        User         @relation(fields: [userId], references: [id])
     sizeBytes   BigInt
     mimeType    String?
     totalChunks Int
     sha256Full  String?
-    status      FileStatus @default(UPLOADING)
-    createdAt   DateTime   @default(now())
-    updatedAt   DateTime   @updatedAt
+    status      FileStatus   @default(UPLOADING)
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
     chunks      Chunk[]
     permissions Permission[]
 }
