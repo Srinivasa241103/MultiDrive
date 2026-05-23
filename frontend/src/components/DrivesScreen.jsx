@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { drivesApi } from '../api/drive.js'
+import { drivesApi } from '../api/drives.js'
 
 function formatBytes(n) {
   if (n == null) return '—'

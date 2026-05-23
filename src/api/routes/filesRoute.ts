@@ -121,7 +121,29 @@ export async function fileRoutes(app: FastifyInstance): Promise<void> {
         where: { userId: request.user.id },
         orderBy: { createdAt: 'desc' },
       });
-      reply.send(files);
+      reply.send(files.map((f) => ({ ...f, sizeBytes: Number(f.sizeBytes) })));
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    '/files/:id/chunks',
+    { onRequest: [authenticate] },
+    async (request, reply) => {
+      const chunks = await db.chunk.findMany({
+        where: { fileId: request.params.id },
+        include: { account: { select: { email: true } } },
+        orderBy: { sequenceNo: 'asc' },
+      });
+
+      return reply.send(
+        chunks.map((c) => ({
+          sequenceNo: c.sequenceNo,
+          email:      c.account.email,
+          driveFileId: c.driveFileId ?? '—',
+          sizeBytes:  c.sizeBytes,
+          status:     c.status,
+        })),
+      );
     },
   );
 
