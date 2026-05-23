@@ -7,12 +7,14 @@ generator client {
 }
 
 model User {
-    id        String    @id @default(uuid())
-    email     String    @unique
-    name      String?
-    createdAt DateTime  @default(now())
-    accounts  Account[]
-    files     File[]
+    id           String    @id @default(uuid())
+    email        String    @unique
+    username     String?   @unique
+    name         String?
+    passwordHash String?
+    createdAt    DateTime  @default(now())
+    accounts     Account[]
+    files        File[]
 }
 
 model Account {

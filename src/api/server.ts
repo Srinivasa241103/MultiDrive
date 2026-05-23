@@ -1,10 +1,13 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
+import cookie from '@fastify/cookie';
 import multipart from '@fastify/multipart';
 import jwt from '@fastify/jwt';
 import { healthRoutes } from './routes/health.routes.js';
 import { authRoutes } from './routes/authRoutes.js';
+import { userAuthRoutes } from './routes/userAuthRoutes.js';
 import { fileRoutes } from './routes/filesRoute.js';
+import { accountsRoutes } from './routes/accountsRoute.js';
 import { logger } from '../utils/logger.js';
 import { config } from '../config/env.js';
 import { CONSTANTS } from '../config/constants.js';
@@ -20,11 +23,15 @@ export async function buildServer(): Promise<FastifyInstance> {
         loggerInstance: logger,
     });
 
-    await app.register(cors, { origin: true });
+    await app.register(cors, { origin: true, credentials: true });
+    await app.register(cookie);
     await app.register(multipart, {
         limits: { fileSize: CONSTANTS.MAX_UPLOAD_SIZE_BYTES },
     });
-    await app.register(jwt, { secret: config.JWT_SECRET });
+    await app.register(jwt, {
+        secret: config.JWT_SECRET,
+        cookie: { cookieName: 'session', signed: false },
+    });
 
     const serverAdapter = new FastifyAdapter();
     serverAdapter.setBasePath('/admin/queues');
@@ -36,7 +43,9 @@ export async function buildServer(): Promise<FastifyInstance> {
 
     await app.register(healthRoutes);
     await app.register(authRoutes);
+    await app.register(userAuthRoutes);
     await app.register(fileRoutes);
+    await app.register(accountsRoutes);
     app.get('/dev/token', async (request, reply) => {
         const email = 'dev@test.com';
         const user = await import('../db/client.js').then(m => m.db.user.upsert({

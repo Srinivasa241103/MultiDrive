@@ -42,6 +42,8 @@ const envSchema = z.object({
     ENCRYPTION_PASSPHRASE: z.string().min(16),
     ENCRYPTION_SALT: z.string().length(32), // 16 bytes = 32 hex chars
 
+    FRONTEND_URL: z.string().url().default('http://localhost:5173'),
+
 })
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -3,3 +3,5 @@ node_modules/
 dist/
 *.mp4
 downloaded-video.mp4
+public/
+frontend/.env

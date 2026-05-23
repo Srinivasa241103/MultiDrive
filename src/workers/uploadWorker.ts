@@ -1,12 +1,12 @@
 import { Worker } from 'bullmq';
 import { readFile } from 'fs/promises';
-import { redisConnection } from './queue/connection';
-import { uploadChunkToDrive } from './driveService';
-import { markChunkComplete } from './fileService';
-import { recordBytesUploaded } from './placementService';
+import { redisConnection } from '../services/queue/connection';
+import { uploadChunkToDrive } from '../services/driveService';
+import { markChunkComplete } from '../services/fileService';
+import { recordBytesUploaded } from '../services/placementService';
 import { CONSTANTS } from '../config/constants';
 import { logger } from '../utils/logger';
-import { encrypt, getKey } from './cipher';
+import { encrypt, getKey } from '../services/cipher';
 import type { UploadJobData, UploadJobResult } from '../types/domain';
 
 export const uploadWorker = new Worker<UploadJobData, UploadJobResult>(
