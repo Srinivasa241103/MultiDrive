@@ -40,6 +40,7 @@ export async function fileRoutes(app: FastifyInstance): Promise<void> {
 
     const fileId = await createFileRecord({
       userId: request.user.id,
+      name: fileName,
       sizeBytes: result.totalBytes,
       mimeType,
       totalChunks: result.chunks.length,
@@ -102,7 +103,8 @@ export async function fileRoutes(app: FastifyInstance): Promise<void> {
         return reply.status(409).send({ error: 'File is not fully uploaded yet' });
       }
 
-      reply.header('Content-Disposition', `attachment; filename="${file.id}"`);
+      const safeName = encodeURIComponent(file.name || file.id).replace(/'/g, "'");
+      reply.header('Content-Disposition', `attachment; filename="${file.name || file.id}"; filename*=UTF-8''${safeName}`);
       reply.header('Content-Type', file.mimeType ?? 'application/octet-stream');
 
       const chunks = downloadFileChunks(file.id);

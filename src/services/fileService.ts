@@ -10,6 +10,7 @@ import { IntegrityError } from '../utils/errors';
 
 export async function createFileRecord(params: {
   userId: string;
+  name: string;
   sizeBytes: number;
   mimeType: string;
   totalChunks: number;
@@ -18,6 +19,7 @@ export async function createFileRecord(params: {
   const file = await db.file.create({
     data: {
       userId: params.userId,
+      name: params.name,
       sizeBytes: BigInt(params.sizeBytes),
       mimeType: params.mimeType,
       totalChunks: params.totalChunks,

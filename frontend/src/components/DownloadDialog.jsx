@@ -45,11 +45,18 @@ export default function DownloadDialog({ file, onCancel, onDone }) {
       const a   = document.createElement('a')
       a.href     = url
       a.download = filename.trim()
+      a.rel      = 'noopener'
+      // Do NOT set target=_blank — download attribute handles it;
+      // but we DO need the element attached to trigger click in Firefox.
       document.body.appendChild(a)
       a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      // Small delay before cleanup so the browser can initiate the download
+      setTimeout(() => {
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 200)
 
+      setDownloading(false)
       onDone?.(filename.trim())
     } catch (err) {
       setError(err.message || 'Download failed.')
