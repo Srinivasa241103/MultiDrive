@@ -38,6 +38,7 @@ model File {
     id          String       @id @default(uuid())
     userId      String
     user        User         @relation(fields: [userId], references: [id])
+    name        String       @default("")
     sizeBytes   BigInt
     mimeType    String?
     totalChunks Int
