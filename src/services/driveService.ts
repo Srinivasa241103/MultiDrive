@@ -11,12 +11,12 @@ export async function uploadChunkToDrive(
     accountId: string,
     data: Buffer,
     fileName: string,
-): Promise<{ driveFileId: string; md5Checksum: string}>{
+): Promise<{ driveFileId: string; md5Checksum: string }> {
     const accessToken = await getValidAccessToken(accountId);
     const result = await performResumableUpload(accessToken, data, fileName);
 
     const localMd5 = mdf5Buffer(data);
-    if(localMd5 !== result.md5Checksum){
+    if (localMd5 !== result.md5Checksum) {
         throw new IntegrityError(
             `MD5 mismatch after upload for ${fileName}`,
             result.md5Checksum,
@@ -24,14 +24,14 @@ export async function uploadChunkToDrive(
         );
     }
 
-    logger.info({accountId, driveFileId: result.driveFileId, fileName}, 'chunk uploaded to Drive');
+    logger.info({ accountId, driveFileId: result.driveFileId, fileName }, 'chunk uploaded to Drive');
     return result;
 }
 
 export async function downloadChunkFromDrive(
     accountId: string,
     driveFileId: string,
-) : Promise<Buffer> {
+): Promise<Buffer> {
     const accessToken = await getValidAccessToken(accountId);
 
     const response = await fetch(`${DRIVE_BASE}/files/${driveFileId}?alt=media`,
@@ -41,28 +41,28 @@ export async function downloadChunkFromDrive(
             },
         });
 
-        if(!response.ok){
-            throw new ChunkUploadError(`Failed to download chunk ${driveFileId} from account ${accountId}: ${response.status}`);
-        }
+    if (!response.ok) {
+        throw new ChunkUploadError(`Failed to download chunk ${driveFileId} from account ${accountId}: ${response.status}`);
+    }
 
-        const arrayBuffer = await response.arrayBuffer();
-        return Buffer.from(arrayBuffer);
+    const arrayBuffer = await response.arrayBuffer();
+    return Buffer.from(arrayBuffer);
 }
 
 export async function deleteChunkFromDrive(
     accountId: string,
     driveFileId: string,
-) : Promise<void>{
+): Promise<void> {
     const accessToken = await getValidAccessToken(accountId);
 
-    const response = await fetch(`${DRIVE_BASE}/files/${driveFileId}`,{
+    const response = await fetch(`${DRIVE_BASE}/files/${driveFileId}`, {
         method: 'DELETE',
         headers: {
             Authorization: `Bearer ${accessToken}`,
         },
     });
 
-    if(!response.ok && response.status != 404){
+    if (!response.ok && response.status != 404) {
         throw new Error(
             `Failed to delete chunk ${driveFileId} from account ${accountId}: ${response.status}`,
         );
@@ -72,22 +72,22 @@ export async function deleteChunkFromDrive(
 
 export async function getStorageQuota(
     accountId: string,
-) : Promise< {total : number; used: number}>{
+): Promise<{ total: number; used: number }> {
     const accessToken = await getValidAccessToken(accountId);
 
-    const response = await fetch(`${DRIVE_BASE}/about?fields=storageQuota`,{
+    const response = await fetch(`${DRIVE_BASE}/about?fields=storageQuota`, {
         headers: {
             Authorization: `Bearer ${accessToken}`,
         },
     });
 
-    if(!response.ok){
+    if (!response.ok) {
         const body = await response.text();
         throw new Error(`Failed to fetch storage quota for account ${accountId}: ${response.status} — ${body}`);
     }
 
     const data = (await response.json()) as {
-        storageQuota: {limit: string; usage: string};
+        storageQuota: { limit: string; usage: string };
     };
 
     return {
